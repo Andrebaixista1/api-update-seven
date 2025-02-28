@@ -6,11 +6,16 @@
       "use": "@vercel/node"
     }
   ],
-  
+  "crons": [
+    {
+      "path": "/reboot-channels",
+      "schedule": "0 * * * *"
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/index.js"
+      "dest": "index.js"
     }
   ]
 }

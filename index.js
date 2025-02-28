@@ -45,7 +45,10 @@ function autoRebootChannels() {
   });
 }
 
-cron.schedule('0 * * * *', autoRebootChannels);
+if (!process.env.VERCEL) {
+  cron.schedule('0 * * * *', autoRebootChannels);
+  app.listen(5000, () => {});
+}
 
 app.get('/reboot-channels', async (req, res) => {
   const now = new Date();
@@ -110,11 +113,5 @@ app.get('/', (req, res) => {
   `;
   res.send(html);
 });
-
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(5000, () => {
-    console.log("Rodando localmente na porta 5000");
-  });
-}
 
 module.exports = app;
