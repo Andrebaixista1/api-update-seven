@@ -1,10 +1,9 @@
 const express = require('express');
 const axios = require('axios');
+const serverless = require('serverless-http');
 
 const app = express();
-const port = 3000; // Você pode alterar a porta se necessário
 
-// Array de tokens com nomes amigáveis (adicione novos tokens conforme necessário)
 const tokens = [
   {
     token: "676165323a2e54db790d797c",
@@ -78,7 +77,6 @@ const tokens = [
     token: "6762c170277827c7192af3da",
     name: "Aceite"
   },
-  
 ];
 
 // Objeto para armazenar o status da última execução para cada token
@@ -129,11 +127,14 @@ function sendRebootRequests() {
   }
 }
 
-// Executa a função imediatamente e depois a cada 1 hora (3600000 ms)
-sendRebootRequests();
-setInterval(sendRebootRequests, 3600000);
+// Se você quiser testar localmente, pode manter o setInterval,
+// mas lembre-se que no ambiente serverless da Vercel a função será invocada apenas sob demanda.
+if (process.env.NODE_ENV !== 'production') {
+  sendRebootRequests();
+  setInterval(sendRebootRequests, 3600000); // a cada 1 hora
+}
 
-// Rota do Express para exibir uma página com o status da última execução
+// Rota para exibir o status da última execução
 app.get('/', (req, res) => {
   let html = `
     <html>
@@ -176,7 +177,6 @@ app.get('/', (req, res) => {
   res.send(html);
 });
 
-// Inicia o servidor Express
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
-});
+// Exporta o app como função serverless para Vercel
+module.exports = app;
+module.exports.handler = serverless(app);
