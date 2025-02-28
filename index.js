@@ -27,13 +27,13 @@ const tokens = [
 
 let lastRunStatus = {};
 
-function rebootChannels() {
+function autoRebootChannels() {
   const now = new Date();
   const currentHour = now.getHours();
-  if (currentHour < 8 || currentHour >= 19) return; // Executa apenas entre 8h e 19h
+  if (currentHour < 8 || currentHour >= 19) return;
   tokens.forEach(async ({ token, name }) => {
     try {
-      const response = await axios.post(
+      await axios.post(
         'https://api.seven7chat.com/core/v2/api/channel/reboot',
         { syncContacts: true },
         { headers: { 'access-token': token, 'Content-Type': 'application/json' } }
@@ -45,10 +45,8 @@ function rebootChannels() {
   });
 }
 
-// Agendamento do cron job
-cron.schedule('0 * * * *', rebootChannels);
+cron.schedule('0 * * * *', autoRebootChannels);
 
-// Rota para executar manualmente
 app.get('/reboot-channels', async (req, res) => {
   const now = new Date();
   const currentHour = now.getHours();
@@ -73,7 +71,6 @@ app.get('/reboot-channels', async (req, res) => {
   res.json({ message: "Reboot finalizado", date: now.toLocaleString(), results });
 });
 
-// Rota principal para exibir o status
 app.get('/', (req, res) => {
   let html = `
     <html>
@@ -114,11 +111,9 @@ app.get('/', (req, res) => {
   res.send(html);
 });
 
-// Inicia o servidor localmente
 if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+  app.listen(5000, () => {
+    console.log("Rodando localmente na porta 5000");
   });
 }
 
