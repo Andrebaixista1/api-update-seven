@@ -4,7 +4,6 @@ const cron = require('node-cron');
 
 const app = express();
 
-// Guardamos a data/hora em que o servidor inicia
 const serverStartTime = new Date();
 
 const tokens = [
@@ -29,9 +28,8 @@ const tokens = [
 ];
 
 let lastRunStatus = {};
-let lastCronRunTime = null; // Armazena a última execução do cron
+let lastCronRunTime = null;
 
-// Função para formatar data/hora em "yyyy-MM-dd HH:mm:ss"
 function formatDateTime(date) {
   const pad = (num) => (num < 10 ? '0' + num : num);
   const year = date.getFullYear();
@@ -46,12 +44,8 @@ function formatDateTime(date) {
 function autoRebootChannels() {
   const now = new Date();
   const currentHour = now.getHours();
-  // Executa somente se estiver entre 8h e 19h
   if (currentHour < 8 || currentHour >= 19) return;
-  
-  // Atualiza a última execução do cron
   lastCronRunTime = now;
-  
   tokens.forEach(async ({ token, name }) => {
     try {
       await axios.post(
@@ -66,15 +60,13 @@ function autoRebootChannels() {
   });
 }
 
-// Agendamento do cron job para rodar a cada hora
 cron.schedule('0 * * * *', autoRebootChannels);
 
-// Sobe o servidor
 app.listen(process.env.PORT || 5000, () => {
   console.log("Servidor rodando na porta " + (process.env.PORT || 5000));
+  autoRebootChannels();
 });
 
-// Endpoint para reboot manual dos canais
 app.get('/reboot-channels', async (req, res) => {
   const now = new Date();
   const currentHour = now.getHours();
@@ -96,25 +88,20 @@ app.get('/reboot-channels', async (req, res) => {
       results.push({ name, status: 'Erro', error: error.message });
     }
   }
-  // Atualiza também a última execução do cron quando feito manualmente
   lastCronRunTime = now;
   res.json({ message: "Reboot finalizado", date: now.toLocaleString(), results });
 });
 
-// Endpoint para mostrar o status da API, incluindo a última execução
 app.get('/health', (req, res) => {
-  // Converte o serverStartTime para o formato desejado
   const formattedStartTime = formatDateTime(serverStartTime);
-
   res.json({ 
     status: "API está funcionando", 
-    serverStartTime: formattedStartTime,            // Data/hora em formato yyyy-MM-dd HH:mm:ss
-    uptimeInSeconds: process.uptime(),              // Uptime em segundos
-    lastRun: lastCronRunTime ? lastCronRunTime.toLocaleString() : "Ainda não executado" 
+    serverStartTime: formattedStartTime,
+    uptimeInSeconds: process.uptime(),
+    lastRun: lastCronRunTime ? lastCronRunTime.toLocaleString() : "Ainda não executado"
   });
 });
 
-// Página principal para visualizar o status da última execução da API
 app.get('/', (req, res) => {
   let html = `
     <html>
