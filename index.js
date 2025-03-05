@@ -4,6 +4,9 @@ const cron = require('node-cron');
 
 const app = express();
 
+// Guardamos a data/hora em que o servidor inicia
+const serverStartTime = new Date();
+
 const tokens = [
   { token: "676165323a2e54db790d797c", name: "Planejamento" },
   { token: "677fc18faf2160e50235daf0", name: "Vieiratech" },
@@ -27,6 +30,18 @@ const tokens = [
 
 let lastRunStatus = {};
 let lastCronRunTime = null; // Armazena a última execução do cron
+
+// Função para formatar data/hora em "yyyy-MM-dd HH:mm:ss"
+function formatDateTime(date) {
+  const pad = (num) => (num < 10 ? '0' + num : num);
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
 
 function autoRebootChannels() {
   const now = new Date();
@@ -54,6 +69,7 @@ function autoRebootChannels() {
 // Agendamento do cron job para rodar a cada hora
 cron.schedule('0 * * * *', autoRebootChannels);
 
+// Sobe o servidor
 app.listen(process.env.PORT || 5000, () => {
   console.log("Servidor rodando na porta " + (process.env.PORT || 5000));
 });
@@ -87,9 +103,13 @@ app.get('/reboot-channels', async (req, res) => {
 
 // Endpoint para mostrar o status da API, incluindo a última execução
 app.get('/health', (req, res) => {
+  // Converte o serverStartTime para o formato desejado
+  const formattedStartTime = formatDateTime(serverStartTime);
+
   res.json({ 
     status: "API está funcionando", 
-    uptime: process.uptime(), 
+    serverStartTime: formattedStartTime,            // Data/hora em formato yyyy-MM-dd HH:mm:ss
+    uptimeInSeconds: process.uptime(),              // Uptime em segundos
     lastRun: lastCronRunTime ? lastCronRunTime.toLocaleString() : "Ainda não executado" 
   });
 });
