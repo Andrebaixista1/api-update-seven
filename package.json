@@ -1,0 +1,25 @@
+{
+  "name": "api-atualiza-zap",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andrebaixista1/api-update-seven.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Andrebaixista1/api-update-seven/issues"
+  },
+  "homepage": "https://github.com/Andrebaixista1/api-update-seven#readme",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.8.1",
+    "express": "^4.21.2",
+    "node-cron": "^3.0.3"
+  }
+}
