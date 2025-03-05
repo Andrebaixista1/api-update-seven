@@ -44,8 +44,15 @@ function formatDateTime(date) {
 function autoRebootChannels() {
   const now = new Date();
   const currentHour = now.getHours();
+  
+  console.log(`Verificando horário: ${currentHour}`);  // Log de depuração
+  
   if (currentHour < 8 || currentHour >= 19) return;
+  
   lastCronRunTime = now;
+  
+  console.log(`Cron executado em: ${now.toLocaleString()}`);  // Log de depuração
+  
   tokens.forEach(async ({ token, name }) => {
     try {
       await axios.post(
@@ -70,9 +77,13 @@ app.listen(process.env.PORT || 5000, () => {
 app.get('/reboot-channels', async (req, res) => {
   const now = new Date();
   const currentHour = now.getHours();
+  
+  console.log(`Verificando horário para reboot manual: ${currentHour}`); // Log de depuração
+  
   if (currentHour < 8 || currentHour >= 19) {
     return res.json({ message: "Fora do horário permitido.", date: now.toLocaleString() });
   }
+  
   const results = [];
   for (const { token, name } of tokens) {
     try {
@@ -94,6 +105,9 @@ app.get('/reboot-channels', async (req, res) => {
 
 app.get('/health', (req, res) => {
   const formattedStartTime = formatDateTime(serverStartTime);
+  
+  console.log(`Última execução do cron: ${lastCronRunTime ? lastCronRunTime.toLocaleString() : "Ainda não executado"}`); // Log de depuração
+  
   res.json({ 
     status: "API está funcionando", 
     serverStartTime: formattedStartTime,
