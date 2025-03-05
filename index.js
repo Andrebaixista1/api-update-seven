@@ -26,11 +26,17 @@ const tokens = [
 ];
 
 let lastRunStatus = {};
+let lastCronRunTime = null; // Armazena a última execução do cron
 
 function autoRebootChannels() {
   const now = new Date();
   const currentHour = now.getHours();
+  // Executa somente se estiver entre 8h e 19h
   if (currentHour < 8 || currentHour >= 19) return;
+  
+  // Atualiza a última execução do cron
+  lastCronRunTime = now;
+  
   tokens.forEach(async ({ token, name }) => {
     try {
       await axios.post(
@@ -45,11 +51,14 @@ function autoRebootChannels() {
   });
 }
 
-if (!process.env.VERCEL) {
-  cron.schedule('0 * * * *', autoRebootChannels);
-  app.listen(5000, () => {});
-}
+// Agendamento do cron job para rodar a cada hora
+cron.schedule('0 * * * *', autoRebootChannels);
 
+app.listen(process.env.PORT || 5000, () => {
+  console.log("Servidor rodando na porta " + (process.env.PORT || 5000));
+});
+
+// Endpoint para reboot manual dos canais
 app.get('/reboot-channels', async (req, res) => {
   const now = new Date();
   const currentHour = now.getHours();
@@ -71,9 +80,21 @@ app.get('/reboot-channels', async (req, res) => {
       results.push({ name, status: 'Erro', error: error.message });
     }
   }
+  // Atualiza também a última execução do cron quando feito manualmente
+  lastCronRunTime = now;
   res.json({ message: "Reboot finalizado", date: now.toLocaleString(), results });
 });
 
+// Endpoint para mostrar o status da API, incluindo a última execução
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: "API está funcionando", 
+    uptime: process.uptime(), 
+    lastRun: lastCronRunTime ? lastCronRunTime.toLocaleString() : "Ainda não executado" 
+  });
+});
+
+// Página principal para visualizar o status da última execução da API
 app.get('/', (req, res) => {
   let html = `
     <html>
@@ -90,6 +111,7 @@ app.get('/', (req, res) => {
       </head>
       <body>
         <h1>Status da Última Execução da API</h1>
+        <p>Última execução do cron: ${lastCronRunTime ? new Date(lastCronRunTime).toLocaleString() : "Ainda não executado"}</p>
   `;
   if (Object.keys(lastRunStatus).length === 0) {
     html += "<p>Nenhuma execução registrada ainda.</p>";
