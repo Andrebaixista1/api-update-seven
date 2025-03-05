@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cron = require('node-cron');
+const moment = require('moment-timezone'); // Importando a biblioteca moment-timezone
 
 const app = express();
 
@@ -31,21 +32,15 @@ let lastRunStatus = {};
 let lastCronRunTime = null;
 
 function formatDateTime(date) {
-  const pad = (num) => (num < 10 ? '0' + num : num);
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  const seconds = pad(date.getSeconds());
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  // Usando moment-timezone para ajustar a data para o fuso horário de São Paulo (GMT-3)
+  return moment(date).tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss'); // Formato 24 horas
 }
 
 function autoRebootChannels() {
   const now = new Date();
   lastCronRunTime = now;
   
-  console.log(`Cron executado em: ${now.toLocaleString()}`);  // Log de depuração
+  console.log(`Cron executado em: ${formatDateTime(now)}`);  // Log de depuração
   
   tokens.forEach(async ({ token, name }) => {
     try {
@@ -71,7 +66,7 @@ app.listen(process.env.PORT || 5000, () => {
 app.get('/reboot-channels', async (req, res) => {
   const now = new Date();
   
-  console.log(`Reboot manual solicitado em: ${now.toLocaleString()}`); // Log de depuração
+  console.log(`Reboot manual solicitado em: ${formatDateTime(now)}`); // Log de depuração
   
   const results = [];
   for (const { token, name } of tokens) {
@@ -89,19 +84,19 @@ app.get('/reboot-channels', async (req, res) => {
     }
   }
   lastCronRunTime = now;
-  res.json({ message: "Reboot finalizado", date: now.toLocaleString(), results });
+  res.json({ message: "Reboot finalizado", date: formatDateTime(now), results });
 });
 
 app.get('/health', (req, res) => {
   const formattedStartTime = formatDateTime(serverStartTime);
   
-  console.log(`Última execução do cron: ${lastCronRunTime ? lastCronRunTime.toLocaleString() : "Ainda não executado"}`); // Log de depuração
+  console.log(`Última execução do cron: ${lastCronRunTime ? formatDateTime(lastCronRunTime) : "Ainda não executado"}`); // Log de depuração
   
   res.json({ 
     status: "API está funcionando", 
     serverStartTime: formattedStartTime,
     uptimeInSeconds: process.uptime(),
-    lastRun: lastCronRunTime ? lastCronRunTime.toLocaleString() : "Ainda não executado"
+    lastRun: lastCronRunTime ? formatDateTime(lastCronRunTime) : "Ainda não executado"
   });
 });
 
@@ -121,7 +116,7 @@ app.get('/', (req, res) => {
       </head>
       <body>
         <h1>Status da Última Execução da API</h1>
-        <p>Última execução do cron: ${lastCronRunTime ? new Date(lastCronRunTime).toLocaleString() : "Ainda não executado"}</p>
+        <p>Última execução do cron: ${lastCronRunTime ? formatDateTime(lastCronRunTime) : "Ainda não executado"}</p>
   `;
   if (Object.keys(lastRunStatus).length === 0) {
     html += "<p>Nenhuma execução registrada ainda.</p>";
@@ -132,7 +127,7 @@ app.get('/', (req, res) => {
       const statusClass = status.status === 'Sucesso' ? 'status-success' : 'status-error';
       html += `<li>
         <strong>${status.name}</strong><br>
-        Última execução: ${new Date(status.timestamp).toLocaleString()}<br>
+        Última execução: ${formatDateTime(status.timestamp)}<br>
         Status: <span class="${statusClass}">${status.status}</span>
         ${status.error ? `<br>Erro: ${status.error}` : ''}
       </li>`;
