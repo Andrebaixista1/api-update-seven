@@ -43,12 +43,6 @@ function formatDateTime(date) {
 
 function autoRebootChannels() {
   const now = new Date();
-  const currentHour = now.getHours();
-  
-  console.log(`Verificando horário: ${currentHour}`);  // Log de depuração
-  
-  if (currentHour < 8 || currentHour >= 19) return;
-  
   lastCronRunTime = now;
   
   console.log(`Cron executado em: ${now.toLocaleString()}`);  // Log de depuração
@@ -71,18 +65,13 @@ cron.schedule('0 * * * *', autoRebootChannels);
 
 app.listen(process.env.PORT || 5000, () => {
   console.log("Servidor rodando na porta " + (process.env.PORT || 5000));
-  autoRebootChannels();
+  autoRebootChannels(); // Executa assim que o servidor for iniciado
 });
 
 app.get('/reboot-channels', async (req, res) => {
   const now = new Date();
-  const currentHour = now.getHours();
   
-  console.log(`Verificando horário para reboot manual: ${currentHour}`); // Log de depuração
-  
-  if (currentHour < 8 || currentHour >= 19) {
-    return res.json({ message: "Fora do horário permitido.", date: now.toLocaleString() });
-  }
+  console.log(`Reboot manual solicitado em: ${now.toLocaleString()}`); // Log de depuração
   
   const results = [];
   for (const { token, name } of tokens) {
