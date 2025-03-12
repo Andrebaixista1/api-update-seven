@@ -25,7 +25,10 @@ const tokens = [
   { token: "677d3f6ad854900182ced4e8", name: "Aceite/Adapta" },
   { token: "6762eb940e7bb7f767632db0", name: "Shark" },
   { token: "677c31a9cf5bbbca4bbbfa4a", name: "Alpha" },
-  { token: "6762c170277827c7192af3da", name: "Aceite" }
+  { token: "", name: "Aceite" },
+  { token: "", name: "Mesa de Digitação" },
+  { token: "", name: "Christian" },
+  { token: "67d177e335748f10d224af1e", name: "Kimberly" },
 ];
 
 let lastRunStatus = {};
